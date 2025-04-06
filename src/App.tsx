@@ -1,75 +1,35 @@
-import React, { useState } from "react";
+import React, {useCallback, useState} from "react";
 import { generateItems } from "./utils";
 import { Header } from "./components/Header.tsx";
 import { ItemList } from "./components/ItemList.tsx";
 import { ComplexForm } from "./components/ComplexForm.tsx";
 import { NotificationSystem } from "./components/NotificationSystem.tsx";
-import {
-  AppContext,
-  AppContextType,
-  User,
-  Notification,
-} from "./store/common.tsx";
+import { ThemeProvider, useThemeContext } from "./store/ThemeContext.tsx";
+import { UserProvider } from "./store/UserContext.tsx";
+import { NotificationProvider } from "./store/NotificationContext.tsx";
 
-// 메인 App 컴포넌트
-const App: React.FC = () => {
-  const [theme, setTheme] = useState("light");
+
+/** 
+ * InnerApp 컴포넌트를 분리한 이유: Context 설정하는 부분과 UI 렌더링 부분을 분리하고 싶었음..
+ * 기능자체는 문제가 없어보이지만 유지보수에 있어서는 책임과 역할이 다르기 때문에 분리하는 것으로 결정
+ * 
+ */
+
+const InnerApp: React.FC = () => {
+  const { theme } = useThemeContext();
   const [items, setItems] = useState(generateItems(1000));
-  const [user, setUser] = useState<User | null>(null);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
-  };
-
-  const addItems = () => {
+  // InnerApp이 렌더링되면 안에있는 ItemList도 필요없이 렌더링되는걸 막기위해
+  // 의존성배열을 빈배열로.. 처음 렌더링시 한번만 정의되면됨
+  const addItems = useCallback(() => {
     setItems((prevItems) => [
       ...prevItems,
       ...generateItems(1000, prevItems.length),
     ]);
-  };
-
-  const login = (email: string) => {
-    setUser({ id: 1, name: "홍길동", email });
-    addNotification("성공적으로 로그인되었습니다", "success");
-  };
-
-  const logout = () => {
-    setUser(null);
-    addNotification("로그아웃되었습니다", "info");
-  };
-
-  const addNotification = (message: string, type: Notification["type"]) => {
-    const newNotification: Notification = {
-      id: Date.now(),
-      message,
-      type,
-    };
-    setNotifications((prev) => [...prev, newNotification]);
-  };
-
-  const removeNotification = (id: number) => {
-    setNotifications((prev) =>
-      prev.filter((notification) => notification.id !== id),
-    );
-  };
-
-  const contextValue: AppContextType = {
-    theme,
-    toggleTheme,
-    user,
-    login,
-    logout,
-    notifications,
-    addNotification,
-    removeNotification,
-  };
+  }, []);
 
   return (
-    <AppContext.Provider value={contextValue}>
-      <div
-        className={`min-h-screen ${theme === "light" ? "bg-gray-100" : "bg-gray-900 text-white"}`}
-      >
+      <div className={`min-h-screen ${theme === "light" ? "bg-gray-100" : "bg-gray-900 text-white"}`}>
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row">
@@ -83,8 +43,20 @@ const App: React.FC = () => {
         </div>
         <NotificationSystem />
       </div>
-    </AppContext.Provider>
   );
 };
+
+// Context를 분리하려고 하니 Provider를 중첩된 구조로 짜게됨...
+// 이 중첩 구조의 순서가 맞는것인지.... 일단 각 Provider에서 다른 Provider의 context를 사용하지
+// 않아.. 순서는 상관없는것 같다..
+const App: React.FC = () => (
+    <ThemeProvider>
+      <UserProvider>
+        <NotificationProvider>
+          <InnerApp />
+        </NotificationProvider>
+      </UserProvider>
+    </ThemeProvider>
+);
 
 export default App;

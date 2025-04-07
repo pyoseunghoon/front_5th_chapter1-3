@@ -16,7 +16,10 @@ import { NotificationProvider } from "./store/NotificationContext.tsx";
 
 const InnerApp: React.FC = () => {
   const { theme } = useThemeContext();
-  const [items, setItems] = useState(generateItems(1000));
+  // useState 초기 state 다시 생성하지 않기.. useState에 함수를 호출하지말고 함수 자체 전달
+  // -> 그러면 React는 초기화 중에만 함수를 호출
+  const [items, setItems] = useState(() => generateItems(1000));
+  // const [items, setItems] = useState(generateItems(1000));
 
   // InnerApp이 렌더링되면 안에있는 ItemList도 필요없이 렌더링되는걸 막기위해
   // 의존성배열을 빈배열로.. 처음 렌더링시 한번만 정의되면됨

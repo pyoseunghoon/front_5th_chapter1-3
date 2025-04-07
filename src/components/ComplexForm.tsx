@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { renderLog } from "../utils.ts";
-import { useNotificationActionContext } from "../store/NotificationContext.tsx";
+import { useNotificationContext } from "../store/NotificationContext.tsx";
 
 export const ComplexForm: React.FC = React.memo(() => {
   renderLog("ComplexForm rendered");
-  const { addNotification } = useNotificationActionContext();
+  const { addNotification } = useNotificationContext();
 
   const [formData, setFormData] = useState({
     name: "",

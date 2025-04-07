@@ -7,20 +7,17 @@ import React, {
 } from "react";
 import { Notification } from "./common";
 
-export interface NotificationAction {
+export interface NotificationContextType {
+  notifications: Notification[],
   addNotification: (message: string, type: Notification["type"]) => void;
   removeNotification: (id: number) => void;
 }
 
-const NotificationContext = createContext<Notification[] | undefined>(
-  undefined,
-);
-const NotificationActionContext = createContext<NotificationAction | undefined>(
+const NotificationContext = createContext<NotificationContextType | undefined>(
   undefined,
 );
 
 export const NotificationProvider = ({ children }: { children: ReactNode }) => {
-  console.log("NotificationProvider");
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const addNotification = useCallback(
@@ -40,12 +37,8 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <NotificationContext.Provider value={notifications}>
-      <NotificationActionContext.Provider
-        value={{ addNotification, removeNotification }}
-      >
-        {children}
-      </NotificationActionContext.Provider>
+    <NotificationContext.Provider value={{notifications, addNotification, removeNotification}}>
+      {children}
     </NotificationContext.Provider>
   );
 };
@@ -55,15 +48,6 @@ export const useNotificationContext = () => {
   if (!context)
     throw new Error(
       "useNotificationContext must be used within NotificationProvider",
-    );
-  return context;
-};
-
-export const useNotificationActionContext = () => {
-  const context = useContext(NotificationActionContext);
-  if (!context)
-    throw new Error(
-      "useNotificationActionContext must be used within NotificationProvider",
     );
   return context;
 };

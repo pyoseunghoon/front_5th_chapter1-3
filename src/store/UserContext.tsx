@@ -3,10 +3,10 @@ import React, {
   useContext,
   useState,
   ReactNode,
-  useCallback,
+  useCallback, useMemo,
 } from "react";
 import { User } from "./common";
-import { useNotificationActionContext } from "./NotificationContext.tsx";
+import {useNotificationContext} from "./NotificationContext.tsx";
 
 interface UserContextType {
   user: User | null;
@@ -18,7 +18,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const { addNotification } = useNotificationActionContext();
+  const { addNotification } = useNotificationContext();
 
   const login = useCallback(
     (email: string) => {
@@ -33,8 +33,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     addNotification("로그아웃되었습니다", "info");
   }, [addNotification]);
 
+
+  // 아무리 각각이 재정의되지 않고 그대로라해도 객체를 만드는 순간 참조가 바뀌어 값이 바뀌었다고 감지.. ( 객체 리터럴의 참조 ..)
+  const userValue
+      = useMemo(() => { return { user, login, logout } }, [user, login, logout]);
+
   return (
-    <UserContext.Provider value={{ user, login, logout }}>
+    <UserContext.Provider value={userValue}>
       {children}
     </UserContext.Provider>
   );
